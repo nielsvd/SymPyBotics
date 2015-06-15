@@ -106,7 +106,7 @@ def codestring_count(codestring, resume=False):
         return ops, {'add': adds, 'mul': muls, 'total': adds + muls}
 
 
-def gen_matlab_func(code, out_parms, func_parms, func_name='func'):
+def gen_matlab_func(code, out_parms, func_parms, func_name='func', real_type=''):
 
     indent = 4 * ' '
 
@@ -125,7 +125,7 @@ def gen_matlab_func(code, out_parms, func_parms, func_name='func'):
 
     return matlabcode
 
-def gen_py_func(code, out_parms, func_parms, func_name='func'):
+def gen_py_func(code, out_parms, func_parms, func_name='func', real_type=''):
 
     indent = 4 * ' '
 
@@ -151,20 +151,20 @@ def gen_py_func(code, out_parms, func_parms, func_name='func'):
     return pycode
 
 
-def gen_c_func(code, out_parms, func_parms, func_name='func'):
+def gen_c_func(code, out_parms, func_parms, func_name='func', real_type='double'):
 
     indent = 2 * ' '
 
-    ccode = 'void ' + func_name + '( double* '
+    ccode = 'void ' + func_name + '( ' + real_type + '* '
 
-    ccode += ', double* '.join(out_parms)
+    ccode += (', ' + real_type + '* ').join(out_parms)
 
-    ccode += ', const double* '
-    ccode += ', const double* '.join(func_parms)
+    ccode += ', const ' + real_type + '* '
+    ccode += (', const ' + real_type + '* ').join(func_parms)
 
     ccode += ' )\n{\n'
 
-    mainccode = code_to_string(code, out_parms, _ccode, indent, 'double', ';')
+    mainccode = code_to_string(code, out_parms, _ccode, indent, real_type, ';')
 
     ccode += mainccode + '\n' + indent + 'return;\n}'
 
@@ -172,8 +172,28 @@ def gen_c_func(code, out_parms, func_parms, func_name='func'):
 
     return ccode
 
+def gen_cpp_func(code, out_parms, func_parms, func_name='func', real_type='double'):
 
-def gen_julia_func(code, out_parms, func_parms, func_name='func'):
+    indent = 2 * ' '
+
+    ccode = 'void ' + func_name + '( ' + real_type + '& '
+
+    ccode += (', ' + real_type + '& ').join(out_parms)
+
+    ccode += ', const ' + real_type + '& '
+    ccode += (', const ' + real_type + '& ').join(func_parms)
+
+    ccode += ' )\n{\n'
+
+    mainccode = code_to_string(code, out_parms, _ccode, indent, real_type, ';')
+
+    ccode += mainccode + '\n' + indent + 'return;\n}'
+
+    ccode = ccode.replace('\n\n', '\n//\n')
+
+    return ccode
+
+def gen_julia_func(code, out_parms, func_parms, func_name='func', real_type=''):
 
     indent = 4 * ' '
 
@@ -207,7 +227,7 @@ def gen_julia_func(code, out_parms, func_parms, func_name='func'):
     return ccode
 
 
-def code_to_func(lang, code, out_parms, func_name, func_parms, symb_replace):
+def code_to_func(lang, code, out_parms, func_name, func_parms, symb_replace, real_type=''):
 
     if not isinstance(code[1], list):
         code = (code[0], [code[1]])
@@ -217,12 +237,24 @@ def code_to_func(lang, code, out_parms, func_name, func_parms, symb_replace):
     lang = lang.lower()
     if lang in ['python', 'py']:
         gen_func = gen_py_func
-    elif lang in ['c', 'c++']:
+        if real_type != '':
+            raise Exception('Python supports dynamic typing.')
+    elif lang in ['c']:
         gen_func = gen_c_func
+        if real_type == '':
+            real_type = 'double'
+    elif lang in ['cpp','c++']:
+    	gen_func = gen_cpp_func
+        if real_type == '':
+            real_type = 'double'
     elif lang in ['julia', 'jl']:
         gen_func = gen_julia_func
+        if real_type != '':
+            raise Exception('Julia supports dynamic typing.')
     elif lang in ['matlab', 'm']:
         gen_func = gen_matlab_func
+        if real_type != '':
+            raise Exception('Matlab supports dynamic typing.')
     else:
         raise Exception('chosen language not supported.')
 
@@ -236,4 +268,4 @@ def code_to_func(lang, code, out_parms, func_name, func_parms, symb_replace):
             sympified_replace[k] = v
         code = xreplace(code, sympified_replace)
 
-    return gen_func(code, out_parms, func_parms, func_name)
+    return gen_func(code, out_parms, func_parms, func_name, real_type)

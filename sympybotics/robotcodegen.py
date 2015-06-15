@@ -20,7 +20,7 @@ def _gen_parms_subs(parms_symbols, name='parms', offset=0, brackets=['[',']']):
     return subs
 
 
-def robot_code_to_func(lang, code, outputname, funcname, rbtdef):
+def robot_code_to_func(lang, code, outputname, funcname, rbtdef, real_type=''):
     func_parms = []
     subs_pairs = {}
 
@@ -58,4 +58,4 @@ def robot_code_to_func(lang, code, outputname, funcname, rbtdef):
         subs_pairs.update(_gen_q_dq_ddq_subs(rbtdef, offset=idxoffset, brackets=brackets))
 
     return symcode.generation.code_to_func(lang, code, outputname, funcname,
-                                           func_parms, subs_pairs)
+                                           func_parms, subs_pairs, real_type)
