@@ -55,7 +55,8 @@ class RobotDynCode(object):
 
         p('generating end-effector jacobian code')
         jac_se = Subexprs()
-        self.jac_code = jac_se.get(self.kin.J[-1])
+        kin2 = Kinematics(self.rbtdef, self.geo, jac_se.collect)
+        self.jac_code = jac_se.get(kin2.J[-1])
 
         p('generating inverse dynamics code')
         invdyn_se = Subexprs()
