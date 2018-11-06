@@ -246,7 +246,7 @@ def code_to_func(lang, code, out_parms, func_name, func_parms, symb_replace, rea
         if real_type == '':
             real_type = 'double'
     elif lang in ['cpp','c++']:
-    	gen_func = gen_cpp_func
+        gen_func = gen_cpp_func
         if real_type == '':
             real_type = 'double'
     elif lang in ['julia', 'jl']:
